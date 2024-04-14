@@ -8,6 +8,7 @@ import (
 	db "github.com/AlekseyMoiseenko/simplebank/db/sqlc"
 	"github.com/AlekseyMoiseenko/simplebank/util"
 	_ "github.com/lib/pq"
+	_ "go.uber.org/mock/mockgen/model"
 )
 
 func main() {
