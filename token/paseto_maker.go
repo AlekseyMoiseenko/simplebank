@@ -20,20 +20,26 @@ func NewPasetoMaker(key string) Maker {
 }
 
 // CreateToken creates a new token for a specific username and duration
-func (maker *PasetoMaker) CreateToken(username string, duration time.Duration) (string, error) {
+func (maker *PasetoMaker) CreateToken(username string, duration time.Duration) (string, *Payload, error) {
 	// create paseto token
 	token := paseto.NewToken()
 	// Create uuid for token id
 	tokenID, err := uuid.NewRandom()
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	// add data to the token.
 	token.Set("id", tokenID.String())
 	token.Set("username", username)
 	token.SetIssuedAt(time.Now())
 	token.SetExpiration(time.Now().Add(duration))
-	return token.V4Encrypt(maker.symmetricKey, maker.implicit), nil
+
+	payload, err := getPayloadFromToken(&token)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return token.V4Encrypt(maker.symmetricKey, maker.implicit), payload, nil
 }
 
 // VerifyToken checks if the token is valid or not
