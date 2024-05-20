@@ -5,7 +5,6 @@ import (
 	"log"
 	"net"
 
-	"github.com/AlekseyMoiseenko/simplebank/api"
 	db "github.com/AlekseyMoiseenko/simplebank/db/sqlc"
 	"github.com/AlekseyMoiseenko/simplebank/gapi"
 	"github.com/AlekseyMoiseenko/simplebank/pb"
@@ -51,11 +50,11 @@ func runGrpcServer(config util.Config, store db.Store) {
 	}
 }
 
-func runGinServer(config util.Config, store db.Store) {
-	server := api.NewServer(config, store)
-
-	err := server.Start(config.HTTPServerAddress)
-	if err != nil {
-		log.Fatal("cannot start sever:", err)
-	}
-}
+//func runGinServer(config util.Config, store db.Store) {
+//	server := api.NewServer(config, store)
+//
+//	err := server.Start(config.HTTPServerAddress)
+//	if err != nil {
+//		log.Fatal("cannot start sever:", err)
+//	}
+//}
