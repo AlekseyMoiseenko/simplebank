@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"database/sql"
-	"log"
 	"net"
 	"net/http"
+	"os"
 
 	db "github.com/AlekseyMoiseenko/simplebank/db/sqlc"
 	"github.com/AlekseyMoiseenko/simplebank/gapi"
@@ -13,6 +13,8 @@ import (
 	"github.com/AlekseyMoiseenko/simplebank/util"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	_ "github.com/lib/pq"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	_ "go.uber.org/mock/mockgen/model"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -22,12 +24,16 @@ import (
 func main() {
 	config, err := util.LoadConfig(".")
 	if err != nil {
-		log.Fatal("cannot load config:", err)
+		log.Fatal().Err(err).Msg("cannot load config")
+	}
+
+	if config.Environment == "development" {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
 
 	conn, err := sql.Open(config.DBDriver, config.DBSource)
 	if err != nil {
-		log.Fatal("cannot connect to db:", err)
+		log.Fatal().Err(err).Msg("cannot connect to db")
 	}
 
 	store := db.NewStore(conn)
@@ -39,19 +45,20 @@ func main() {
 func runGrpcServer(config util.Config, store db.Store) {
 	server := gapi.NewServer(config, store)
 
-	grpcServer := grpc.NewServer()
+	grpcLogger := grpc.UnaryInterceptor(gapi.GrpcLogger)
+	grpcServer := grpc.NewServer(grpcLogger)
 	pb.RegisterSimpleBankServer(grpcServer, server)
 	reflection.Register(grpcServer)
 
 	listener, err := net.Listen("tcp", config.GRPCServerAddress)
 	if err != nil {
-		log.Fatal("cannot create listener:", err)
+		log.Fatal().Err(err).Msg("cannot create listener")
 	}
 
-	log.Printf("start gRPC server at %s", listener.Addr().String())
+	log.Info().Msgf("start gRPC server at %s", listener.Addr().String())
 	err = grpcServer.Serve(listener)
 	if err != nil {
-		log.Fatal("cannot start gRPC sever:", err)
+		log.Fatal().Err(err).Msg("cannot start gRPC sever")
 	}
 }
 
@@ -74,7 +81,7 @@ func runGatewayServer(config util.Config, store db.Store) {
 
 	err := pb.RegisterSimpleBankHandlerServer(ctx, grpcMux, server)
 	if err != nil {
-		log.Fatal("cannot register handler server", err)
+		log.Fatal().Err(err).Msg("cannot register handler server")
 	}
 
 	mux := http.NewServeMux()
@@ -85,13 +92,13 @@ func runGatewayServer(config util.Config, store db.Store) {
 
 	listener, err := net.Listen("tcp", config.HTTPServerAddress)
 	if err != nil {
-		log.Fatal("cannot create listener:", err)
+		log.Fatal().Err(err).Msg("cannot create listener")
 	}
 
-	log.Printf("start HTTP gateway server at %s", listener.Addr().String())
+	log.Info().Msgf("start HTTP gateway server at %s", listener.Addr().String())
 	err = http.Serve(listener, mux)
 	if err != nil {
-		log.Fatal("cannot start HTTP gateway sever:", err)
+		log.Fatal().Err(err).Msg("cannot start HTTP gateway sever")
 	}
 }
 
@@ -100,6 +107,6 @@ func runGatewayServer(config util.Config, store db.Store) {
 //
 //	err := server.Start(config.HTTPServerAddress)
 //	if err != nil {
-//		log.Fatal("cannot start sever:", err)
+//		log.Fatal().Err(err).Msg("cannot start sever:", err)
 //	}
 //}
