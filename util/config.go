@@ -3,6 +3,7 @@ package util
 import (
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
 
@@ -20,15 +21,19 @@ type Config struct {
 
 func LoadConfig(path string) (config Config, err error) {
 	viper.AddConfigPath(path)
-	viper.SetConfigName("app")
-	viper.SetConfigType("env") //json, xml
-
-	viper.AutomaticEnv()
+	viper.SetConfigFile(".env")
+	viper.SetConfigType("env")
 
 	err = viper.ReadInConfig()
 	if err != nil {
-		return
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+			log.Warn().Err(err).Msg("Local .env file not found, relying on system ENV")
+		} else {
+			return
+		}
 	}
+
+	viper.AutomaticEnv()
 
 	err = viper.Unmarshal(&config)
 	return
