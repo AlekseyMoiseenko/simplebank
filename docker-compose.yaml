@@ -42,7 +42,7 @@ services:
     environment:
       - DB_SOURCE=postgresql://root:secret@postgres:5432/simple_bank?sslmode=disable
       - REDIS_ADDRESS=redis:6379
-      # add all envirnonments or run service manually with .env file
+      # add all envirnonments or run service manually with .env file (see .env.example)
     depends_on:
       postgres:
         condition: service_healthy
