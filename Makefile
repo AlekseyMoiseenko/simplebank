@@ -1,25 +1,18 @@
 DB_URL=postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable
-
-postgres:
-	docker run --name postgres16 --network bank-network -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -d postgres:16-alpine
-
-createdb:
-	docker exec -it postgres16 createdb --username=root --owner=root simple_bank
-
-dropdb:
-	docker exec -it postgres16 dropdb simple_bank
+COMPOSE_FILE := docker-compose.yaml
+MIGRATE_PATH = db/migration
 
 migrateup:
-	migrate -path db/migration -database "$(DB_URL)" -verbose up
+	migrate -path $(MIGRATE_PATH) -database "$(DB_URL)" -verbose up
 
 migrateup1:
-	migrate -path db/migration -database "$(DB_URL)" -verbose up 1
+	migrate -path $(MIGRATE_PATH) -database "$(DB_URL)" -verbose up 1
 
 migratedown:
-	migrate -path db/migration -database "$(DB_URL)" -verbose down
+	migrate -path $(MIGRATE_PATH) -database "$(DB_URL)" -verbose down
 
 migratedown1:
-	migrate -path db/migration -database "$(DB_URL)" -verbose down 1
+	migrate -path $(MIGRATE_PATH) -database "$(DB_URL)" -verbose down 1
 
 db_docs:
 	dbdocs build doc/db.dbml
@@ -48,7 +41,16 @@ proto:
 	--openapiv2_out=doc/swagger --openapiv2_opt=allow_merge=true,merge_file_name=simple_bank \
     proto/*.proto
 
-redis:
-	docker run --name redis -p 6379:6379 -d redis:7.2.5-alpine
+compose-up:
+	docker compose -f $(COMPOSE_FILE) up -d
 
-.PHONY: postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 db_docs db_schema sqlc test server mock proto redis
+compose-down:
+	docker compose -f $(COMPOSE_FILE) down
+
+compose-ps:
+	docker compose -f $(COMPOSE_FILE) ps
+
+compose-logs:
+	docker compose -f $(COMPOSE_FILE) logs -f --tail=200
+
+.PHONY: migrateup migratedown migrateup1 migratedown1 db_docs db_schema sqlc test server mock proto compose-up compose-down compose-ps compose-logs

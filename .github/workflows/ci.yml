@@ -13,32 +13,32 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-        postgres:
-          image: postgres:16
-          env:
-            POSTGRES_USER: root
-            POSTGRES_PASSWORD: secret
-            POSTGRES_DB: simple_bank
-          options: >-
-            --health-cmd pg_isready
-            --health-interval 10s
-            --health-timeout 5s
-            --health-retries 5
-          ports:
-            - 5432:5432
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: root
+          POSTGRES_PASSWORD: secret
+          POSTGRES_DB: simple_bank
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
 
     steps:
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Set up Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v6
       with:
-        go-version: '1.22'
+        go-version: '1.26'
 
     - name: Install golang-migrate
       run: |
-        curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xvz
+        curl -L https://github.com/golang-migrate/migrate/releases/download/v4.19.1/migrate.linux-amd64.tar.gz | tar xvz
         sudo mv migrate /usr/bin/
         which migrate
 
@@ -46,4 +46,9 @@ jobs:
       run: make migrateup
 
     - name: Test
-      run: make test
+      env:
+        ENVIRONMENT: Test
+        DB_DRIVER: postgres
+        DB_SOURCE: postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable
+      run: |
+        make test

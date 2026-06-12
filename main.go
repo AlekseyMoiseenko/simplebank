@@ -24,7 +24,7 @@ import (
 )
 
 func main() {
-	config, err := util.LoadConfig(".")
+	config, err := util.LoadConfig("")
 	if err != nil {
 		log.Fatal().Err(err).Msg("cannot load config")
 	}
@@ -59,7 +59,7 @@ func runTaskProcessor(redisOpt asynq.RedisClientOpt, store db.Store) {
 	}
 }
 
-func runGrpcServer(config util.Config, store db.Store, taskDistributor worker.TaskDistributor) {
+func runGrpcServer(config *util.Config, store db.Store, taskDistributor worker.TaskDistributor) {
 	server := gapi.NewServer(config, store, taskDistributor)
 
 	grpcLogger := grpc.UnaryInterceptor(gapi.GrpcLogger)
@@ -79,7 +79,7 @@ func runGrpcServer(config util.Config, store db.Store, taskDistributor worker.Ta
 	}
 }
 
-func runGatewayServer(config util.Config, store db.Store, taskDistributor worker.TaskDistributor) {
+func runGatewayServer(config *util.Config, store db.Store, taskDistributor worker.TaskDistributor) {
 	server := gapi.NewServer(config, store, taskDistributor)
 
 	jsonOption := runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
