@@ -1,40 +1,81 @@
 package util
 
 import (
+	"errors"
+	"os"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
+)
+
+const (
+	defaultAccessTokenDuration  = 15 * time.Minute
+	defaultRefreshTokenDuration = 24 * time.Hour
 )
 
 type Config struct {
-	Environment          string        `mapstructure:"ENVIRONMENT"`
-	DBDriver             string        `mapstructure:"DB_DRIVER"`
-	DBSource             string        `mapstructure:"DB_SOURCE"`
-	RedisAddress         string        `mapstructure:"REDIS_ADDRESS"`
-	HTTPServerAddress    string        `mapstructure:"HTTP_SERVER_ADDRESS"`
-	GRPCServerAddress    string        `mapstructure:"GRPC_SERVER_ADDRESS"`
-	TokenSymmetricKey    string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
-	AccessTokenDuration  time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
-	RefreshTokenDuration time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
+	DBDriver             string
+	Environment          string
+	DBSource             string
+	RedisAddress         string
+	HTTPServerAddress    string
+	GRPCServerAddress    string
+	TokenSymmetricKey    string
+	AccessTokenDuration  time.Duration
+	RefreshTokenDuration time.Duration
 }
 
-func LoadConfig(path string) (config Config, err error) {
-	viper.AddConfigPath(path)
-	viper.SetConfigFile(".env")
-	viper.SetConfigType("env")
-
-	err = viper.ReadInConfig()
-	if err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			log.Warn().Err(err).Msg("Local .env file not found, relying on system ENV")
-		} else {
-			return
-		}
+func LoadConfig(path string) (*Config, error) {
+	if path == "" {
+		path = ".env"
 	}
 
-	viper.AutomaticEnv()
+	err := godotenv.Load(path)
+	if err != nil {
+		log.Warn().Err(err).Msg("error loading .env file, relying on system ENV")
+	}
 
-	err = viper.Unmarshal(&config)
-	return
+	environment, exist := os.LookupEnv("ENVIRONMENT")
+	if !exist {
+		return nil, errors.New("environments are not configured")
+	}
+
+	return &Config{
+		Environment:          environment,
+		DBDriver:             getEnv("DB_DRIVER", "postgres"),
+		DBSource:             getEnv("DB_SOURCE", ""),
+		RedisAddress:         getEnv("REDIS_ADDRESS", ""),
+		HTTPServerAddress:    getEnv("HTTP_SERVER_ADDRESS", "localhost:8080"),
+		GRPCServerAddress:    getEnv("GRPC_SERVER_ADDRESS", "localhost:9090"),
+		TokenSymmetricKey:    getEnv("TOKEN_SYMMETRIC_KEY", ""),
+		AccessTokenDuration:  getDurationEnv("ACCESS_TOKEN_DURATION", defaultAccessTokenDuration),
+		RefreshTokenDuration: getDurationEnv("REFRESH_TOKEN_DURATION", defaultRefreshTokenDuration),
+	}, nil
+}
+
+func getEnv(key, fallback string) string {
+	value, exist := os.LookupEnv(key)
+	if !exist {
+		log.Warn().Msgf("env %s is missing", key)
+		return fallback
+	}
+
+	return value
+}
+
+func getDurationEnv(key string, fallback time.Duration) time.Duration {
+	value, exist := os.LookupEnv(key)
+	if !exist {
+		log.Warn().Msgf("env %s is missing", key)
+		return fallback
+	}
+
+	duration, err := time.ParseDuration(value)
+	if err != nil {
+		log.Error().Err(err).Msgf("failed to parse env %s; value %s", key, value)
+		return fallback
+	}
+
+	return duration
 }

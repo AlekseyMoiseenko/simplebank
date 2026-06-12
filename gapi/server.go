@@ -11,13 +11,13 @@ import (
 // Server serves gRPC requests for our banking service
 type Server struct {
 	pb.UnimplementedSimpleBankServer
-	config          util.Config
+	config          *util.Config
 	store           db.Store
 	tokenMaker      token.Maker
 	taskDistributor worker.TaskDistributor
 }
 
-func NewServer(config util.Config, store db.Store, taskDistributor worker.TaskDistributor) *Server {
+func NewServer(config *util.Config, store db.Store, taskDistributor worker.TaskDistributor) *Server {
 	tokenMaker := token.NewPasetoMaker(config.TokenSymmetricKey)
 	server := &Server{
 		config:          config,
