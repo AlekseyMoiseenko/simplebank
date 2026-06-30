@@ -69,7 +69,7 @@ func (processor *RedisTaskProcessor) ProcessTaskSendVerifyEmail(ctx context.Cont
 	}
 
 	subject := "Simple Bank"
-	verifyUrl := fmt.Sprintf("%s?email_id=%d&secret_code=%s", verifyUrl, verifyEmail.ID, verifyEmail.SecretCode)
+	verifyUrl := fmt.Sprintf("%s?email_id=%s&secret_code=%s", verifyUrl, verifyEmail.ID, verifyEmail.SecretCode)
 	content := fmt.Sprintf(`Hello %s,<br/>
 	Thank you for registering!<br/>
 	Please <a href="%s">click here</a> to verify your email address.<br/>
