@@ -1,6 +1,8 @@
 package util
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -46,4 +48,10 @@ func RandomCurrency() string {
 
 func RandomEmail() string {
 	return fmt.Sprintf("%s@email.com", RandomString(6))
+}
+
+func RandomHash(size int) string {
+	plain := RandomString(size)
+	hash := sha256.Sum256([]byte(plain))
+	return hex.EncodeToString(hash[:])
 }

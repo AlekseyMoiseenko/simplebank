@@ -22,6 +22,9 @@ type Config struct {
 	HTTPServerAddress    string
 	GRPCServerAddress    string
 	TokenSymmetricKey    string
+	SmtpName             string
+	SmtpUser             string
+	SmtpPass             string
 	AccessTokenDuration  time.Duration
 	RefreshTokenDuration time.Duration
 }
@@ -49,6 +52,9 @@ func LoadConfig(path string) (*Config, error) {
 		HTTPServerAddress:    getEnv("HTTP_SERVER_ADDRESS", "localhost:8080"),
 		GRPCServerAddress:    getEnv("GRPC_SERVER_ADDRESS", "localhost:9090"),
 		TokenSymmetricKey:    getEnv("TOKEN_SYMMETRIC_KEY", ""),
+		SmtpName:             getEnv("SMTP_NAME", ""),
+		SmtpUser:             getEnv("SMTP_USER", ""),
+		SmtpPass:             getEnv("SMTP_PASS", ""),
 		AccessTokenDuration:  getDurationEnv("ACCESS_TOKEN_DURATION", defaultAccessTokenDuration),
 		RefreshTokenDuration: getDurationEnv("REFRESH_TOKEN_DURATION", defaultRefreshTokenDuration),
 	}, nil

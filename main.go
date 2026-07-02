@@ -9,6 +9,7 @@ import (
 
 	db "github.com/AlekseyMoiseenko/simplebank/db/sqlc"
 	"github.com/AlekseyMoiseenko/simplebank/gapi"
+	"github.com/AlekseyMoiseenko/simplebank/mail"
 	"github.com/AlekseyMoiseenko/simplebank/pb"
 	"github.com/AlekseyMoiseenko/simplebank/util"
 	"github.com/AlekseyMoiseenko/simplebank/worker"
@@ -45,15 +46,20 @@ func main() {
 	}
 
 	taskDistributor := worker.NewRedisTaskDistributor(redisOpt)
-	go runTaskProcessor(redisOpt, store)
+	go runTaskProcessor(config, redisOpt, store)
 	go runGatewayServer(config, store, taskDistributor)
 	runGrpcServer(config, store, taskDistributor)
 }
 
-func runTaskProcessor(redisOpt asynq.RedisClientOpt, store db.Store) {
-	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, store)
+func runTaskProcessor(config *util.Config, redisOpt asynq.RedisClientOpt, store db.Store) {
+	mailer, err := mail.NewGmailSender(config.SmtpName, config.SmtpUser, config.SmtpPass)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to create mail sender")
+	}
+
+	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, store, mailer)
 	log.Info().Msg("start task processor")
-	err := taskProcessor.Start()
+	err = taskProcessor.Start()
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to start task processor")
 	}

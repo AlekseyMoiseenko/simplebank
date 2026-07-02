@@ -24,7 +24,7 @@ sqlc:
 	sqlc generate
 
 test:
-	go test -v -cover ./...
+	go test -v -cover -short ./...
 
 server:
 	go run main.go
@@ -53,4 +53,7 @@ compose-ps:
 compose-logs:
 	docker compose -f $(COMPOSE_FILE) logs -f --tail=200
 
-.PHONY: migrateup migratedown migrateup1 migratedown1 db_docs db_schema sqlc test server mock proto compose-up compose-down compose-ps compose-logs
+new-migration:
+	migrate create -ext sql -dir db/migration -seq $(name)
+
+.PHONY: migrateup migratedown migrateup1 migratedown1 db_docs db_schema sqlc test server mock proto compose-up compose-down compose-ps compose-logs new-migration
