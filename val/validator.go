@@ -6,6 +6,17 @@ import (
 	"regexp"
 )
 
+const (
+	usernameMinLen = 3
+	usernameMaxLen = 100
+	fullNameMinLen = 3
+	fullNameMaxLen = 100
+	passwordMinLen = 6
+	passwordMaxLen = 100
+	emailMinLen    = 3
+	emailMaxLen    = 320
+)
+
 var (
 	isValidUsername = regexp.MustCompile(`^[a-z0-9_]+$`).MatchString
 	isValidFullName = regexp.MustCompile(`^[a-zA-Z\s]+$`).MatchString
@@ -22,7 +33,7 @@ func ValidateString(value string, minLenght int, maxLenght int) error {
 }
 
 func ValidateUsername(value string) error {
-	if err := ValidateString(value, 3, 100); err != nil {
+	if err := ValidateString(value, usernameMinLen, usernameMaxLen); err != nil {
 		return err
 	}
 
@@ -34,7 +45,7 @@ func ValidateUsername(value string) error {
 }
 
 func ValidateFullName(value string) error {
-	if err := ValidateString(value, 3, 100); err != nil {
+	if err := ValidateString(value, fullNameMinLen, fullNameMaxLen); err != nil {
 		return err
 	}
 
@@ -46,7 +57,7 @@ func ValidateFullName(value string) error {
 }
 
 func ValidatePassword(value string) error {
-	if err := ValidateString(value, 6, 100); err != nil {
+	if err := ValidateString(value, passwordMinLen, passwordMaxLen); err != nil {
 		return err
 	}
 
@@ -54,7 +65,7 @@ func ValidatePassword(value string) error {
 }
 
 func ValidateEmail(value string) error {
-	if err := ValidateString(value, 3, 200); err != nil {
+	if err := ValidateString(value, emailMinLen, emailMaxLen); err != nil {
 		return err
 	}
 
