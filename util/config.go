@@ -15,7 +15,6 @@ const (
 )
 
 type Config struct {
-	DBDriver             string
 	Environment          string
 	DBSource             string
 	RedisAddress         string
@@ -46,7 +45,6 @@ func LoadConfig(path string) (*Config, error) {
 
 	return &Config{
 		Environment:          environment,
-		DBDriver:             getEnv("DB_DRIVER", "postgres"),
 		DBSource:             getEnv("DB_SOURCE", ""),
 		RedisAddress:         getEnv("REDIS_ADDRESS", ""),
 		HTTPServerAddress:    getEnv("HTTP_SERVER_ADDRESS", "localhost:8080"),

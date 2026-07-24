@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"net"
 	"net/http"
 	"os"
@@ -15,7 +14,7 @@ import (
 	"github.com/AlekseyMoiseenko/simplebank/worker"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/hibiken/asynq"
-	_ "github.com/lib/pq"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	_ "go.uber.org/mock/mockgen/model"
@@ -34,12 +33,12 @@ func main() {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
 
-	conn, err := sql.Open(config.DBDriver, config.DBSource)
+	cPool, err := pgxpool.New(context.Background(), config.DBSource)
 	if err != nil {
 		log.Fatal().Err(err).Msg("cannot connect to db")
 	}
 
-	store := db.NewStore(conn)
+	store := db.NewStore(cPool)
 
 	redisOpt := asynq.RedisClientOpt{
 		Addr: config.RedisAddress,
