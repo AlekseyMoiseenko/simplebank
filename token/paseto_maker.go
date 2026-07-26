@@ -20,7 +20,7 @@ func NewPasetoMaker(key string) Maker {
 }
 
 // CreateToken creates a new token for a specific username and duration
-func (maker *PasetoMaker) CreateToken(username string, duration time.Duration) (string, *Payload, error) {
+func (maker *PasetoMaker) CreateToken(username string, role string, duration time.Duration) (string, *Payload, error) {
 	// create paseto token
 	token := paseto.NewToken()
 	// Create uuid for token id
@@ -31,6 +31,7 @@ func (maker *PasetoMaker) CreateToken(username string, duration time.Duration) (
 	// add data to the token.
 	token.Set("id", tokenID.String())
 	token.Set("username", username)
+	token.Set("role", role)
 	token.SetIssuedAt(time.Now())
 	token.SetExpiration(time.Now().Add(duration))
 
@@ -71,6 +72,10 @@ func getPayloadFromToken(t *paseto.Token) (*Payload, error) {
 	if err != nil {
 		return nil, ErrInvalidToken
 	}
+	role, err := t.GetString("role")
+	if err != nil {
+		return nil, ErrInvalidToken
+	}
 	issuedAt, err := t.GetIssuedAt()
 	if err != nil {
 		return nil, ErrInvalidToken
@@ -83,6 +88,7 @@ func getPayloadFromToken(t *paseto.Token) (*Payload, error) {
 	return &Payload{
 		ID:        uuid.MustParse(id),
 		Username:  username,
+		Role:      role,
 		IssuedAt:  issuedAt,
 		ExpiredAt: expiredAt,
 	}, nil
